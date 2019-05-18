@@ -8,14 +8,15 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 //Import routes for "catalog" area of site
 var catalogRouter = require('./routes/catalog');
-var compress = require('compress');  
+var compression = require('compression');  
 var helmet = require('helmet');
 
 var app = express();
 
 //Set up mongoose connection
 var mongoose = require('mongoose');
-var mongoDB = 'mongodb+srv://swinghw:root1234@wing-0c4h3.mongodb.net/local_library?retryWrites=true';
+var dev_db_url = 'mongodb+srv://swinghw:root1234@wing-0c4h3.mongodb.net/local_library?retryWrites=true';
+var mongoDB = process.env.MONGODB_URI || dev_db_url;
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -29,7 +30,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(compress());//compress all the following routes
+app.use(compression());//compress all the following routes
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
