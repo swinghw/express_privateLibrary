@@ -8,7 +8,6 @@ var genre_controller = require('../controllers/genreController');
 var book_instance_controller = require('../controllers/bookInstanceController');
 
 /// BOOK ROUTES ///
-
 // GET catalog home page.
 router.get('/', book_controller.index);
 

@@ -1,18 +1,22 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 //Import routes for "catalog" area of site
 var catalogRouter = require('./routes/catalog');
 var compression = require('compression');  
 var helmet = require('helmet');
+//for setup login system
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy
+var session = require('express-session');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var flash = require('connect-flash');
 
 var app = express();
-
 //Set up mongoose connection
 var mongoose = require('mongoose');
 var dev_db_url = 'mongodb+srv://swinghw:root1234@wing-0c4h3.mongodb.net/local_library?retryWrites=true';
@@ -20,6 +24,7 @@ var mongoDB = process.env.MONGODB_URI || dev_db_url;
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -32,24 +37,39 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());//compress all the following routes
 app.use(express.static(path.join(__dirname, 'public')));
+const Account = require('./models/account');
+app.use(session({ 
+  secret: 'root4553',
+  cookie: {maxAge:60000},
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(flash());
+// initialize the passport module for login
+app.use(passport.initialize());
+app.use(passport.session());
+// use static authenticate method of model in LocalStrategy
+passport.use(new LocalStrategy(Account.authenticate()));
+//set passport serialize and deserialize the user object
+passport.serializeUser(Account.serializeUser());
+passport.deserializeUser(Account.deserializeUser()); 
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 // Add catalog routes to middleware chain.
 app.use('/catalog', catalogRouter);  
 
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
-
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
+// render the error page
   res.status(err.status || 500);
   res.render('error');
 });

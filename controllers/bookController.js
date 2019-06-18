@@ -2,13 +2,12 @@ var Book = require('../models/book');
 var Author = require('../models/author');
 var Genre = require('../models/genre');
 var BookInstance = require('../models/bookinstance');
+var passport = require('passport');
 const { body,validationResult } = require('express-validator/check');
 const { sanitizeBody } = require('express-validator/filter');
-
 var async = require('async');
 
-exports.index = function(req, res) {   
-    
+exports.index = function(req, res) {    
     async.parallel({
         book_count: function(callback) {
             Book.countDocuments({}, callback); // Pass an empty object as match condition to find all documents of this collection
@@ -24,15 +23,14 @@ exports.index = function(req, res) {
         },
         genre_count: function(callback) {
             Genre.countDocuments({}, callback);
-        }
+        }      
     }, function(err, results) {
-        res.render('index', { title: 'Local Library Home', error: err, data: results });
+        res.render('index', { title: 'Local Library Home', error: err, data: results, user:req.user });
     });
 };
 
 // Display list of all Books.
 exports.book_list = function(req, res, next) {
-
     Book.find({}, 'title author')
       .populate('author')
       .exec(function (err, list_books) {
