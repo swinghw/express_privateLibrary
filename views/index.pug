@@ -2,7 +2,8 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #[em LocalLibrary]: user.username 
+  if(user)
+   p Welcome to #[em LocalLibrary]: !{user.username} 
 
   h1 Dynamic content
 

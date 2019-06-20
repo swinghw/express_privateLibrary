@@ -1,10 +1,12 @@
 extends layout
 
 block content
-  if (!user)
-    a(href="/users/login") Login
-    br
+   
     
   if (user)
     p You are currently logged in as #{user.username}
     a(href="/users/logout") Logout
+
+  if message.length
+        div(id="message")
+          div(class="alert alert-danger text-center") #{message}  

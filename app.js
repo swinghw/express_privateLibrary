@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const Account = require('./models/account');
 app.use(session({ 
   secret: 'root4553',
-  cookie: {maxAge:60000},
+  cookie: {maxAge:600000},
   resave: false,
   saveUninitialized: false
 }));

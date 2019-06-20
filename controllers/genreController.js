@@ -12,7 +12,7 @@ exports.genre_list = function(req, res, next) {
       .exec(function (err, list_genres) {
         if (err) { return next(err); }
         //Successful, so render
-        res.render('genre_list', { title: 'Genre List', genre_list: list_genres });
+        res.render('genre_list', { title: 'Genre List', genre_list: list_genres, user: req.user});
       });
   
   };
@@ -39,13 +39,14 @@ exports.genre_detail = function(req, res, next) {
             return next(err);
         }
         // Successful, so render
-        res.render('genre_detail', { title: 'Genre Detail', genre: results.genre, genre_books: results.genre_books } );
+        res.render('genre_detail', { title: 'Genre Detail', genre: results.genre, genre_books: results.genre_books, user: req.user } );
     });
 
 };
 
 // Display Genre create form on GET.
-exports.genre_create_get = function(req, res, next) {     
+exports.genre_create_get = function(req, res, next) { 
+    if (!req.user){res.redirect('/users/login')};    
     res.render('genre_form', { title: 'Create Genre' });
   };
 
@@ -103,7 +104,7 @@ exports.genre_create_post =  [
 
 // Display Genre delete form on GET.
 exports.genre_delete_get = function(req, res, next) {
-
+  if (!req.user){res.redirect('/users/login')};
   async.parallel({
       genre: function(callback) {
         Genre.findById(req.params.id).exec(callback)
@@ -153,6 +154,7 @@ exports.genre_delete_post = function(req, res, next) {
 
 // Display Genre update form on GET.
 exports.genre_update_get = function(req, res, next) {
+  if (!req.user){res.redirect('/users/login')};
     Genre.findById(req.params.id)
     .exec(function(err,results){
       if (err) { return next(err); }

@@ -36,7 +36,7 @@ exports.book_list = function(req, res, next) {
       .exec(function (err, list_books) {
         if (err) { return next(err); }
         //Successful, so render
-        res.render('book_list', { title: 'Book List', book_list: list_books });
+        res.render('book_list', { title: 'Book List', book_list: list_books, user: req.user});
       });
     };
 // Display detail page for a specific book.
@@ -63,14 +63,14 @@ exports.book_detail = function(req, res, next) {
             return next(err);
         }
         // Successful, so render.
-        res.render('book_detail', { title: 'Title', book: results.book, book_instances: results.book_instance } );
+        res.render('book_detail', { title: 'Title', book: results.book, book_instances: results.book_instance, user: req.user } );
     });
 
 };
 
 // Display book create form on GET.
 exports.book_create_get = function(req, res, next) { 
-      
+     if (!req.user){res.redirect('/users/login')}; 
     // Get all authors and genres, which we can use for adding to our book.
     async.parallel({
         authors: function(callback) {
@@ -160,7 +160,7 @@ exports.book_create_post = [
 
 // Display book delete form on GET.
 exports.book_delete_get = function(req, res, next) {
-
+    if (!req.user){res.redirect('/users/login')};
     async.parallel({
         book: function(callback) {
           Book.findById(req.params.id).exec(callback)
@@ -210,7 +210,7 @@ exports.book_delete_post = function(req, res, next) {
 
 // Display book update form on GET.
 exports.book_update_get = function(req, res, next) {
-
+    if (!req.user){res.redirect('/users/login')};
     // Get book, authors and genres for form.
     async.parallel({
         book: function(callback) {

@@ -12,7 +12,7 @@ exports.author_list = function(req, res, next) {
       .exec(function (err, list_authors) {
         if (err) { return next(err); }
         //Successful, so render
-        res.render('author_list', { title: 'Author List', author_list: list_authors });
+        res.render('author_list', { title: 'Author List', author_list: list_authors, user: req.user});
       });
   
   };
@@ -37,12 +37,13 @@ exports.author_detail = function(req, res, next) {
             return next(err);
         }
         // Successful, so render.
-        res.render('author_detail', { title: 'Author Detail', author: results.author, author_books: results.authors_books } );
+        res.render('author_detail', { title: 'Author Detail', author: results.author, author_books: results.authors_books, user: req.user } );
     });
 
 };
 // Display Author create form on GET.
-exports.author_create_get = function(req, res, next) {       
+exports.author_create_get = function(req, res, next) {
+    if (!req.user){res.redirect('/users/login')};       
     res.render('author_form', { title: 'Create Author'});
 };
 
@@ -95,7 +96,7 @@ exports.author_create_post = [
 ];
 
 exports.author_delete_get = function(req, res, next) {
-
+    if (!req.user){res.redirect('/users/login')};
     async.parallel({
         author: function(callback) {
             Author.findById(req.params.id).exec(callback)
@@ -145,6 +146,7 @@ exports.author_delete_post = function(req, res, next) {
 
 // Display Author update form on GET.
 exports.author_update_get = function(req, res,next) {
+    if (!req.user){res.redirect('/users/login')};
     Author.findById(req.params.id, function(err, results){
         if (err) {return next(err);}
         if (results._id ==null){ //no results
