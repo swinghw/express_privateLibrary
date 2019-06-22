@@ -8,6 +8,7 @@ var usersRouter = require('./routes/users');
 var catalogRouter = require('./routes/catalog');
 var compression = require('compression');  
 var helmet = require('helmet');
+var bcrypt = require('bcrypt-nodejs');
 //for setup login system
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy
@@ -37,7 +38,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());//compress all the following routes
 app.use(express.static(path.join(__dirname, 'public')));
-const Account = require('./models/account');
+const User = require('./models/user');
 app.use(session({ 
   secret: 'root4553',
   cookie: {maxAge:600000},
@@ -49,10 +50,67 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 // use static authenticate method of model in LocalStrategy
-passport.use(new LocalStrategy(Account.authenticate()));
+passport.use('login', new LocalStrategy({
+  passReqToCallback: true
+},
+  function (req, username, password, done) {
+  User.findOne({ username: username }, function (err, user) {
+    if (err) {
+      return done(err)
+    }
+
+    if (!user) {
+      return done(null, false, req.flash('info', 'User not found.'))
+    }
+
+    var isValidPassword = function (user, password) {
+      return bcrypt.compareSync(password, user.password)
+    }
+
+    if (!isValidPassword(user, password)) {
+      return done(null, false, req.flash('info', 'Invalid password'))
+    }
+
+    return done(null, user)
+  })
+}
+)); 
+passport.use('signup', new LocalStrategy({
+  passReqToCallback: true
+}, function (req, username, password, done) {
+  var findOrCreateUser = function () {
+    User.findOne({ username: username }, function (err, user) {
+      if (err) {
+        return done(err);
+      }
+
+      if (user) {
+        return done(null, false, req.flash('info', 'User already exists'));
+      } else {
+        var newUser = new User();
+        newUser.username = username;
+        newUser.password = bcrypt.hashSync(password, bcrypt.genSaltSync(10), null);
+        newUser.email = req.params.email;
+        newUser.save(function (err, user) {
+          if (err) {
+            throw err;
+          }
+          return done(null, user);
+        });
+      }
+    });
+  };
+  process.nextTick(findOrCreateUser)
+}));
 //set passport serialize and deserialize the user object
-passport.serializeUser(Account.serializeUser());
-passport.deserializeUser(Account.deserializeUser()); 
+passport.serializeUser(function (user, done) {
+  done(null, user._id);
+});
+passport.deserializeUser(function (id, done) {
+  User.findById(id, function (err, user) {
+    done(err, user);
+  });
+}); 
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

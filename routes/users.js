@@ -7,7 +7,7 @@ var user_controller = require('../controllers/userController');
 
 //user Routes
 router.get('/login',user_controller.login_get);
-router.post('/login', passport.authenticate('local'), function(req, res) {
+router.post('/login', passport.authenticate('login'), function(req, res) {
     res.redirect('/catalog');
 });
 router.get('/logout', function(req, res) {
@@ -16,7 +16,7 @@ router.get('/logout', function(req, res) {
     res.render('test', {user:req.user, message: req.flash('info')});
 });
 //stop register for unique user mode
-//router.get('/register',user_controller.signup_get);
-//router.post('/register',user_controller.signup_post);
+router.get('/register',user_controller.signup_get);
+router.post('/register',passport.authenticate('signup'),function(req,res){res.redirect('/catalog') });
 
 module.exports = router;
