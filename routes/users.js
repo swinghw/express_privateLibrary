@@ -1,15 +1,13 @@
 var express = require('express');
 var router = express.Router(); 
 var passport = require('passport');
-
+var flash = require('connect-flash');
 //Require user controller modules.
 var user_controller = require('../controllers/userController');
 
 //user Routes
 router.get('/login',user_controller.login_get);
-router.post('/login', passport.authenticate('local'), function(req, res) {
-    res.redirect('/catalog');
-});
+router.post('/login', passport.authenticate('local',{successRedirect:'/', failureRedirect:'/users/login', failureFlash:'login failure'}));
 router.get('/logout', function(req, res) {
     req.flash('info','Bye, see you soon');
     req.logout();
