@@ -43,8 +43,8 @@ exports.author_detail = function(req, res, next) {
 };
 // Display Author create form on GET.
 exports.author_create_get = function(req, res, next) {
-    if (!req.user){res.redirect('/users/login')};       
-    res.render('author_form', { title: 'Create Author'});
+  //  if (!req.user){res.redirect('/users/login')};       
+    res.render('author_form', { title: 'Create Author',user:req.user});
 };
 
 // Handle Author create on POST.
@@ -96,7 +96,7 @@ exports.author_create_post = [
 ];
 
 exports.author_delete_get = function(req, res, next) {
-    if (!req.user){res.redirect('/users/login')};
+//    if (!req.user){res.redirect('/users/login')};
     async.parallel({
         author: function(callback) {
             Author.findById(req.params.id).exec(callback)
@@ -110,7 +110,7 @@ exports.author_delete_get = function(req, res, next) {
             res.redirect('/catalog/authors');
         }
         // Successful, so render.
-        res.render('author_delete', { title: 'Delete Author', author: results.author, author_books: results.authors_books } );
+        res.render('author_delete', { title: 'Delete Author', author: results.author, author_books: results.authors_books,user:req.user } );
     });
 
 };
@@ -146,7 +146,7 @@ exports.author_delete_post = function(req, res, next) {
 
 // Display Author update form on GET.
 exports.author_update_get = function(req, res,next) {
-    if (!req.user){res.redirect('/users/login')};
+ //   if (!req.user){res.redirect('/users/login')};
     Author.findById(req.params.id, function(err, results){
         if (err) {return next(err);}
         if (results._id ==null){ //no results
@@ -155,7 +155,7 @@ exports.author_update_get = function(req, res,next) {
             return next(err);      
         }
         //success
-        res.render('author_form', {title: 'Update Author', author: results});
+        res.render('author_form', {title: 'Update Author', author: results,user:req.user});
     });
 };
 

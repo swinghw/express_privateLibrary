@@ -70,7 +70,7 @@ exports.book_detail = function(req, res, next) {
 
 // Display book create form on GET.
 exports.book_create_get = function(req, res, next) { 
-     if (!req.user){res.redirect('/users/login')}; 
+//     if (!req.user){res.redirect('/users/login')}; 
     // Get all authors and genres, which we can use for adding to our book.
     async.parallel({
         authors: function(callback) {
@@ -81,7 +81,7 @@ exports.book_create_get = function(req, res, next) {
         },
     }, function(err, results) {
         if (err) { return next(err); }
-        res.render('book_form', { title: 'Create Book', authors: results.authors, genres: results.genres });
+        res.render('book_form', { title: 'Create Book', authors: results.authors, genres: results.genres,user:req.user });
     });
     
 };
@@ -160,7 +160,7 @@ exports.book_create_post = [
 
 // Display book delete form on GET.
 exports.book_delete_get = function(req, res, next) {
-    if (!req.user){res.redirect('/users/login')};
+//    if (!req.user){res.redirect('/users/login')};
     async.parallel({
         book: function(callback) {
           Book.findById(req.params.id).exec(callback)
@@ -174,7 +174,7 @@ exports.book_delete_get = function(req, res, next) {
             res.redirect('/catalog/books');
         }
         // Successful, so render.
-        res.render('book_delete', { title: 'Deleting Book', book: results.book, book_bookinstances: results.book_bookinstances } );
+        res.render('book_delete', { title: 'Deleting Book', book: results.book, book_bookinstances: results.book_bookinstances,user:req.user } );
     });
   
   };
@@ -210,7 +210,7 @@ exports.book_delete_post = function(req, res, next) {
 
 // Display book update form on GET.
 exports.book_update_get = function(req, res, next) {
-    if (!req.user){res.redirect('/users/login')};
+//    if (!req.user){res.redirect('/users/login')};
     // Get book, authors and genres for form.
     async.parallel({
         book: function(callback) {
@@ -238,7 +238,7 @@ exports.book_update_get = function(req, res, next) {
                     }
                 }
             }
-            res.render('book_form', { title: 'Update Book', authors:results.authors, genres:results.genres, book: results.book });
+            res.render('book_form', { title: 'Update Book', authors:results.authors, genres:results.genres, book: results.book,user:req.user });
         });
 
 };
