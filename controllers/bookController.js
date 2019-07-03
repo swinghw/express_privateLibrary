@@ -5,6 +5,7 @@ var BookInstance = require('../models/bookinstance');
 const { body,validationResult } = require('express-validator/check');
 const { sanitizeBody } = require('express-validator/filter');
 var async = require('async');
+const paginate = require('express-paginate');
 
 exports.index = function(req, res) {    
     async.parallel({
@@ -29,15 +30,36 @@ exports.index = function(req, res) {
 };
 
 // Display list of all Books.
-exports.book_list = function(req, res, next) {
-    Book.find({}, 'title author')
-      .populate('author')
-      .exec(function (err, list_books) {
-        if (err) { return next(err); }
-        //Successful, so render
-        res.render('book_list', { title: 'Book List', book_list: list_books, user: req.user});
+exports.book_list = async function(req, res, next) {
+    try {
+          const [ results, itemCount ] = await Promise.all([
+          Book.find({},'title author').populate('author').limit(req.query.limit).skip(req.skip).lean().exec(),
+          Book.count({})
+        ]);
+        const pageCount = Math.ceil(itemCount / req.query.limit);
+
+/*     if (req.accepts('json')) {
+      // inspired by Stripe's API response for list objects
+      res.json({
+        object: 'list',
+        has_more: paginate.hasNextPages(req)(pageCount),
+        data: results
       });
-    };
+     } else {                    */
+      res.render('book_list', {
+        title:'Book List',  
+        book_list: results,
+        pageCount,
+        itemCount,
+        pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+      });
+    }
+
+   catch (err) {
+    next(err);
+  }
+
+};
 // Display detail page for a specific book.
 exports.book_detail = function(req, res, next) {
 

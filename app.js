@@ -15,6 +15,7 @@ var session = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var flash = require('connect-flash');
+const paginate = require('express-paginate');
 
 var app = express();
 //Set up mongoose connection
@@ -25,10 +26,12 @@ mongoose.connect(mongoDB, { useNewUrlParser: true });
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
+// keep this before all routes that will use pagination
+app.use(paginate.middleware(10, 50));
 
 app.use(helmet());
 app.use(logger('dev'));
