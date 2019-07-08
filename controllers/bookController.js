@@ -7,37 +7,35 @@ const { sanitizeBody } = require('express-validator/filter');
 var async = require('async');
 const paginate = require('express-paginate');
 
-exports.index = function(req, res) {    
-    async.parallel({
-        book_count: function(callback) {
-            Book.countDocuments({}, callback); // Pass an empty object as match condition to find all documents of this collection
-        },
-        book_instance_count: function(callback) {
-            BookInstance.countDocuments({}, callback);
-        },
-        book_instance_available_count: function(callback) {
-            BookInstance.countDocuments({status:'Available'}, callback);
-        },
-        author_count: function(callback) {
-            Author.countDocuments({}, callback);
-        },
-        genre_count: function(callback) {
-            Genre.countDocuments({}, callback);
-        }      
-    }, function(err, results) {
-        res.render('index', { title: 'Local Library Home', error: err, data: results, user:req.user });
-    });
+exports.index = async function(req, res, next) {    
+    try{
+    const results  = await Promise.all([
+        Book.countDocuments({})  // Pass an empty object as match condition to find all documents of this collection
+        ,         
+        BookInstance.countDocuments({})
+        ,         
+        BookInstance.countDocuments({status:'Available'})
+        ,
+        Author.countDocuments({})
+        ,
+        Genre.countDocuments({})    
+    ]);
+      
+    res.render('index', { title: 'Local Library Home', data: results, user:req.user });
+      }
+    catch (err) {
+        next(err);
+      }
 };
 
 // Display list of all Books.
 exports.book_list = async function(req, res, next) {
     try {
           const [ results, itemCount ] = await Promise.all([
-          Book.find({},'title author').populate('author').limit(req.query.limit).skip(req.skip).lean().exec(),
+          Book.find({},'title author').populate('author').limit(req.query.limit).skip(req.skip).exec(),
           Book.count({})
         ]);
         const pageCount = Math.ceil(itemCount / req.query.limit);
-
 /*     if (req.accepts('json')) {
       // inspired by Stripe's API response for list objects
       res.json({
@@ -61,32 +59,26 @@ exports.book_list = async function(req, res, next) {
 
 };
 // Display detail page for a specific book.
-exports.book_detail = function(req, res, next) {
-
-    async.parallel({
-        book: function(callback) {
-
-            Book.findById(req.params.id)
-              .populate('author')
-              .populate('genre')
-              .exec(callback);
-        },
-        book_instance: function(callback) {
-
-          BookInstance.find({ 'book': req.params.id })
-          .exec(callback);
-        },
-    }, function(err, results) {
-        if (err) { return next(err); }
-        if (results.book==null) { // No results.
+exports.book_detail =  async function(req, res, next) {
+    try{
+        const [book,book_instance]= await Promise.all([Book.findById(req.params.id)
+        .populate('author')
+        .populate('genre')
+        .exec() 
+        , BookInstance.find({ 'book': req.params.id })
+        .exec()
+        ]);     
+        if (book==null) { // No results.
             var err = new Error('Book not found');
             err.status = 404;
             return next(err);
         }
         // Successful, so render.
-        res.render('book_detail', { title: 'Title', book: results.book, book_instances: results.book_instance, user: req.user } );
-    });
-
+        res.render('book_detail', { title: 'Title', book: book, book_instances: book_instance, user: req.user } );
+    }
+    catch(err){
+        next(err);
+    }
 };
 
 // Display book create form on GET.
